@@ -58,7 +58,43 @@
       border: 1px solid rgba(255,255,255,0.52);
       box-shadow: 0 8px 20px rgba(0,0,0,0.04);
     }
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
 
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #40506c;
+  font-size: 13px;
+  font-weight: 900;
+  background: rgba(255,255,255,0.42);
+  border: 1px solid rgba(255,255,255,0.52);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: 0.18s ease;
+}
+
+.nav-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.58);
+}
+
+.nav-btn.active {
+  background: #ff4200;
+  color: #ffffff;
+  border-color: rgba(255, 66, 0, 0.35);
+  box-shadow: 0 10px 24px rgba(255, 66, 0, 0.2);
+}
     .hero,
     .panel {
       background: rgba(255,255,255,0.28);
@@ -403,8 +439,11 @@
 </head>
 <body>
   <main class="wrap">
-    <a class="top-link" href="../">← 메인으로 돌아가기</a>
-
+<nav class="top-nav">
+  <a class="nav-btn" href="../">← 메인</a>
+  <a class="nav-btn active" href="../return/">반품리스트 관리</a>
+  <a class="nav-btn" href="../profit/">이익율 계산기</a>
+</nav>
     <section class="hero">
       <div class="badge">📦 반품 업무 관리</div>
       <h1>반품리스트 <span class="point">관리</span></h1>
