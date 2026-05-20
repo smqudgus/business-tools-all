@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이익율 계산기</title>
+  <style>
+    :root {
+      --bg1: #dfeaff;
+      --bg2: #c9d8f3;
+      --glass: rgba(255, 255, 255, 0.28);
+      --glass-line: rgba(255, 255, 255, 0.48);
+      --text: #1c2333;
+      --muted: #667085;
+      --shadow: 0 18px 45px rgba(74, 103, 161, 0.18);
+      --orange: #ff4200;
+      --danger: #ff4d4f;
+      --success: #0f9f6e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 12%, rgba(122, 146, 255, 0.55), transparent 30%),
+        radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.5), transparent 25%),
+        radial-gradient(circle at 80% 88%, rgba(177, 217, 255, 0.62), transparent 32%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: #40506c;
+      font-size: 13px;
+      font-weight: 900;
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(255,255,255,0.52);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    }
+
+    .hero,
+    .panel,
+    .result-card {
+      background: rgba(255,255,255,0.28);
+      border: 1px solid rgba(255,255,255,0.48);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before,
+    .panel::before,
+    .result-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.38) 0%,
+        rgba(255,255,255,0.08) 42%,
+        rgba(255,255,255,0.03) 100%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .hero {
+      padding: 34px;
+      min-height: 250px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(255,255,255,0.52);
+      color: #40506c;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4vw, 50px);
+      line-height: 1.1;
+      letter-spacing: -1.7px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .desc {
+      margin: 16px 0 0;
+      color: #5f6f89;
+      font-size: 15px;
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
+      word-break: keep-all;
+    }
+
+    .result-card {
+      min-height: 250px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .result-label {
+      font-size: 14px;
+      color: #586880;
+      font-weight: 800;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .margin-rate {
+      font-size: clamp(48px, 7vw, 78px);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -2.5px;
+      color: var(--orange);
+      text-shadow: 0 4px 20px rgba(255,66,0,0.18);
+      position: relative;
+      z-index: 1;
+    }
+
+    .profit-box {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .mini-result {
+      background: rgba(255,255,255,0.25);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .mini-result span {
+      display: block;
+      font-size: 13px;
+      color: #5e6d85;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .mini-result strong {
+      display: block;
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.8px;
+      color: #1c2333;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+    }
+
+    .panel-head {
+      padding: 24px 26px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.6px;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .form-grid,
+    .fee-list,
+    .summary {
+      position: relative;
+      z-index: 1;
+    }
+
+    .form-grid {
+      padding: 0 26px 26px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .fee-list {
+      padding: 0 26px 22px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .fee-mode-field {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 900;
+      color: #354156;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input, select {
+      width: 100%;
+      height: 54px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.58);
+      background: rgba(255,255,255,0.34);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      outline: none;
+      padding: 0 46px 0 16px;
+      font-size: 16px;
+      font-weight: 850;
+      color: var(--text);
+      transition: 0.2s ease;
+    }
+
+    select {
+      padding-right: 16px;
+    }
+
+    input::placeholder {
+      color: #8a97ab;
+      font-weight: 650;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(255,255,255,0.98);
+      background: rgba(255,255,255,0.52);
+      box-shadow:
+        0 0 0 4px rgba(255,255,255,0.24),
+        0 8px 24px rgba(120,145,200,0.12);
+    }
+
+    .unit {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7890;
+      font-size: 13px;
+      font-weight: 900;
+      pointer-events: none;
+    }
+
+    .help {
+      font-size: 12px;
+      color: #6f7e95;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    .summary {
+      padding: 0 26px 26px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-inner {
+      background: rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.36);
+      border-radius: 24px;
+      padding: 8px 18px;
+    }
+
+    .sum-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.28);
+      padding: 14px 0;
+      color: #60708a;
+      font-size: 15px;
+      gap: 16px;
+    }
+
+    .sum-row strong {
+      color: #1e2636;
+      font-size: 16px;
+      font-weight: 950;
+      text-align: right;
+    }
+
+    .sum-row:last-child {
+      border-bottom: 0;
+    }
+
+    .reset-btn {
+      width: 100%;
+      height: 54px;
+      margin-top: 8px;
+      border: 0;
+      border-radius: 999px;
+      background: #111111;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .notice {
+      margin-top: 6px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.24);
+      border: 1px solid rgba(255,255,255,0.36);
+      color: #5f6f88;
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .negative { color: var(--danger) !important; }
+    .positive { color: var(--success) !important; }
+
+    @media (max-width: 960px) {
+      .hero-grid,
+      .calculator {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        width: min(100% - 18px, 1180px);
+        padding: 18px 0 28px;
+      }
+
+      .hero,
+      .result-card,
+      .panel {
+        border-radius: 22px;
+      }
+
+      .hero,
+      .result-card {
+        padding: 24px;
+      }
+
+      .panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .panel-head span {
+        white-space: normal;
+      }
+
+      .form-grid,
+      .fee-list {
+        grid-template-columns: 1fr;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .summary {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .profit-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="top-link" href="../">← 메인으로 돌아가기</a>
+
+    <section class="hero-grid">
+      <div class="hero">
+        <div class="badge">📊 판매가 기준 자동 계산</div>
+        <h1>이익율 계산기</h1>
+        <p class="desc">
+          매입가, 판매가, 배송료, 포장비, 기타비용, 오픈마켓 수수료, 카드결제 수수료를 입력하면
+          최종 마진율과 순이익을 자동으로 계산합니다.
+        </p>
+      </div>
+
+      <aside class="result-card">
+        <div>
+          <div class="result-label">최종 마진율</div>
+          <div class="margin-rate" id="marginRate">0.0%</div>
+        </div>
+        <div class="profit-box">
+          <div class="mini-result">
+            <span>순이익</span>
+            <strong id="netProfit">0원</strong>
+          </div>
+          <div class="mini-result">
+            <span>총 비용</span>
+            <strong id="totalCost">0원</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="calculator">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>기본 비용 입력</h2>
+          <span>숫자 입력 시 자동 계산</span>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="purchasePrice">매입가</label>
+            <div class="input-wrap">
+              <input id="purchasePrice" type="text" inputmode="numeric" placeholder="예: 35000" />
+              <span class="unit">원</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="salePrice">판매가</label>
+            <div class="input-wrap">
+              <input id="salePrice" type="text" inputmode="numeric" placeholder="예: 82000" />
+              <span class="unit">원</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="shippingFee">배송료</label>
+            <div class="input-wrap">
+              <input id="shippingFee" type="text" inputmode="numeric" placeholder="예: 3000" />
+              <span class="unit">원</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="freeShippingLimit">조건 무료배송</label>
+            <div class="input-wrap">
+              <input id="freeShippingLimit" type="text" inputmode="numeric" placeholder="예: 50000" />
+              <span class="unit">원</span>
+            </div>
+            <div class="help">고객에게는 무료배송이더라도, 판매자 부담 배송료는 비용에 포함됩니다.</div>
+          </div>
+
+          <div class="field">
+            <label for="packingCost">포장비</label>
+            <div class="input-wrap">
+              <input id="packingCost" type="text" inputmode="numeric" placeholder="예: 500" />
+              <span class="unit">원</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="etcCost">기타</label>
+            <div class="input-wrap">
+              <input id="etcCost" type="text" inputmode="numeric" placeholder="예: 0" />
+              <span class="unit">원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>수수료</h2>
+          <span>판매가 기준 % 계산</span>
+        </div>
+
+        <div class="fee-list">
+          <div class="field">
+            <label for="marketFee">오픈마켓 수수료</label>
+            <div class="input-wrap">
+              <input id="marketFee" type="text" inputmode="decimal" placeholder="예: 6" />
+              <span class="unit">%</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="cardFee">카드결제 수수료</label>
+            <div class="input-wrap">
+              <input id="cardFee" type="text" inputmode="decimal" placeholder="예: 3.3" />
+              <span class="unit">%</span>
+            </div>
+          </div>
+
+          <div class="field fee-mode-field">
+            <label for="feeMode">수수료 계산 방식</label>
+            <select id="feeMode">
+              <option value="separate">오픈마켓 + 카드 수수료 각각 계산</option>
+              <option value="combined">합산 수수료로 계산</option>
+            </select>
+            <div class="help">예: 판매가 82,000원 기준 6%는 4,920원입니다. 실제 정산 수수료가 5,360원이면 약 6.54%로 입력해야 합니다.</div>
+          </div>
+        </div>
+
+        <div class="panel-head">
+          <h2>계산 내역</h2>
+          <span>자동 반영</span>
+        </div>
+
+        <div class="summary">
+          <div class="summary-inner">
+            <div class="sum-row"><span>판매자 부담 배송료</span><strong id="appliedShipping">0원</strong></div>
+            <div class="sum-row"><span>오픈마켓 수수료</span><strong id="marketFeeWon">0원</strong></div>
+            <div class="sum-row"><span>카드결제 수수료</span><strong id="cardFeeWon">0원</strong></div>
+            <div class="sum-row"><span>총 수수료</span><strong id="totalFeeWon">0원</strong></div>
+            <div class="sum-row"><span>손익 상태</span><strong id="profitStatus">입력 대기</strong></div>
+          </div>
+          <button class="reset-btn" type="button" id="resetBtn">초기화</button>
+          <div class="notice">
+            ※ 마진율 = 순이익 ÷ 판매가 × 100 기준입니다.<br />
+            ※ 조건 무료배송은 고객에게만 무료로 적용되며, 판매자 부담 배송료는 비용에 포함됩니다.<br />
+            ※ 실제 정산금은 플랫폼별 부가세, 쿠폰, 광고비, 추가 배송비 정책에 따라 달라질 수 있습니다.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ids = [
+      "purchasePrice", "salePrice", "shippingFee", "freeShippingLimit",
+      "packingCost", "etcCost", "marketFee", "cardFee", "feeMode"
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    const toNumber = (value) => {
+      if (!value) return 0;
+      return Number(String(value).replace(/[^0-9.]/g, "")) || 0;
+    };
+
+    const formatWon = (num) => {
+      const rounded = Math.round(num);
+      return rounded.toLocaleString("ko-KR") + "원";
+    };
+
+    const formatInput = (input) => {
+      const raw = input.value;
+      if (input.id === "marketFee" || input.id === "cardFee") {
+        input.value = raw.replace(/[^0-9.]/g, "");
+        return;
+      }
+      const number = toNumber(raw);
+      input.value = number ? number.toLocaleString("ko-KR") : "";
+    };
+
+    function calculate() {
+      const purchasePrice = toNumber($("purchasePrice").value);
+      const salePrice = toNumber($("salePrice").value);
+      const shippingFee = toNumber($("shippingFee").value);
+      const packingCost = toNumber($("packingCost").value);
+      const etcCost = toNumber($("etcCost").value);
+      const marketFeeRate = toNumber($("marketFee").value);
+      const cardFeeRate = toNumber($("cardFee").value);
+
+      const appliedShipping = shippingFee;
+      const marketFeeWon = salePrice * (marketFeeRate / 100);
+      const cardFeeWon = salePrice * (cardFeeRate / 100);
+      const totalFee = marketFeeWon + cardFeeWon;
+
+      const totalCost = purchasePrice + appliedShipping + packingCost + etcCost + totalFee;
+      const netProfit = salePrice - totalCost;
+      const marginRate = salePrice > 0 ? (netProfit / salePrice) * 100 : 0;
+
+      $("marginRate").textContent = marginRate.toFixed(1) + "%";
+      $("netProfit").textContent = formatWon(netProfit);
+      $("totalCost").textContent = formatWon(totalCost);
+      $("appliedShipping").textContent = formatWon(appliedShipping);
+      $("marketFeeWon").textContent = formatWon(marketFeeWon);
+      $("cardFeeWon").textContent = formatWon(cardFeeWon);
+      $("totalFeeWon").textContent = formatWon(totalFee);
+
+      const status = $("profitStatus");
+      status.classList.remove("negative", "positive");
+
+      if (salePrice === 0) {
+        status.textContent = "입력 대기";
+      } else if (netProfit < 0) {
+        status.textContent = "손실";
+        status.classList.add("negative");
+      } else if (netProfit === 0) {
+        status.textContent = "본전";
+      } else {
+        status.textContent = "이익";
+        status.classList.add("positive");
+      }
+    }
+
+    ids.forEach((id) => {
+      const el = $(id);
+      el.addEventListener("input", () => {
+        if (el.tagName === "INPUT") formatInput(el);
+        calculate();
+      });
+      el.addEventListener("change", calculate);
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      ids.forEach((id) => {
+        if ($(id).tagName === "INPUT") $(id).value = "";
+      });
+      $("feeMode").value = "separate";
+      calculate();
+    });
+
+    calculate();
+  </script>
+</body>
+</html>

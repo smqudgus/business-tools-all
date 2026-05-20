@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>반품리스트 관리</title>
+  <style>
+    :root {
+      --bg1: #dfeaff;
+      --bg2: #c9d8f3;
+      --glass: rgba(255, 255, 255, 0.28);
+      --glass-line: rgba(255, 255, 255, 0.48);
+      --text: #1c2333;
+      --muted: #667085;
+      --shadow: 0 18px 45px rgba(74, 103, 161, 0.18);
+      --orange: #ff4200;
+      --danger: #ff4d4f;
+      --green: #0f9f6e;
+      --yellow: #f5a623;
+      --gray: #7b8798;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 12%, rgba(122, 146, 255, 0.55), transparent 30%),
+        radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.5), transparent 25%),
+        radial-gradient(circle at 80% 88%, rgba(177, 217, 255, 0.62), transparent 32%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      width: min(1320px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: #40506c;
+      font-size: 13px;
+      font-weight: 900;
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(255,255,255,0.52);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    }
+
+    .hero,
+    .panel {
+      background: rgba(255,255,255,0.28);
+      border: 1px solid rgba(255,255,255,0.48);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before,
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.38) 0%,
+        rgba(255,255,255,0.08) 42%,
+        rgba(255,255,255,0.03) 100%
+      );
+      pointer-events: none;
+    }
+
+    .hero {
+      padding: 34px;
+      margin-bottom: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(255,255,255,0.52);
+      color: #40506c;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4vw, 50px);
+      line-height: 1.1;
+      letter-spacing: -1.7px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .point {
+      color: var(--orange);
+      text-shadow: 0 4px 20px rgba(255,66,0,0.18);
+    }
+
+    .desc {
+      margin: 16px 0 0;
+      color: #5f6f89;
+      font-size: 15px;
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
+      word-break: keep-all;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel-head {
+      padding: 22px 24px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.6px;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .form-area {
+      padding: 0 24px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 900;
+      color: #354156;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.58);
+      background: rgba(255,255,255,0.34);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      outline: none;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      transition: 0.2s ease;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(255,255,255,0.98);
+      background: rgba(255,255,255,0.52);
+      box-shadow:
+        0 0 0 4px rgba(255,255,255,0.24),
+        0 8px 24px rgba(120,145,200,0.12);
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      height: 50px;
+      border: none;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .primary-btn {
+      background: var(--orange);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(255,66,0,0.2);
+    }
+
+    .secondary-btn {
+      background: #111111;
+      color: #fff;
+    }
+
+    .right-area {
+      display: grid;
+      gap: 22px;
+    }
+
+    .toolbar {
+      padding: 0 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .table-wrap {
+      padding: 0 24px 24px;
+      position: relative;
+      z-index: 1;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: top;
+      border-bottom: 1px solid rgba(255,255,255,0.22);
+    }
+
+    th {
+      color: #4d5f7a;
+      font-size: 13px;
+      font-weight: 900;
+      background: rgba(255,255,255,0.24);
+      white-space: nowrap;
+    }
+
+    td {
+      color: #25324a;
+      font-weight: 600;
+      word-break: keep-all;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.28);
+    }
+
+    .status-접수 { color: var(--orange); }
+    .status-확인중 { color: var(--yellow); }
+    .status-교환완료 { color: var(--green); }
+    .status-환불완료 { color: var(--green); }
+    .status-보류 { color: var(--gray); }
+
+    .action-btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      margin-right: 6px;
+    }
+
+    .edit-btn {
+      background: rgba(255,255,255,0.44);
+      color: #1c2333;
+      border: 1px solid rgba(255,255,255,0.45);
+    }
+
+    .delete-btn {
+      background: #111111;
+      color: #fff;
+    }
+
+    .empty-box {
+      padding: 30px;
+      text-align: center;
+      color: #62728c;
+      font-size: 14px;
+      line-height: 1.7;
+      background: rgba(255,255,255,0.18);
+      border: 1px dashed rgba(255,255,255,0.45);
+      border-radius: 20px;
+    }
+
+    .small-note {
+      padding: 0 24px 24px;
+      color: #60708a;
+      font-size: 12px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 1080px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        width: min(100% - 18px, 1320px);
+        padding: 18px 0 28px;
+      }
+
+      .hero, .panel {
+        border-radius: 22px;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+
+      .panel-head,
+      .form-area,
+      .toolbar,
+      .table-wrap,
+      .small-note {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .two-col,
+      .toolbar,
+      .btn-row {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        min-width: 900px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="top-link" href="../">← 메인으로 돌아가기</a>
+
+    <section class="hero">
+      <div class="badge">📦 반품 업무 관리</div>
+      <h1>반품리스트 <span class="point">관리</span></h1>
+      <p class="desc">
+        반품 접수 내용을 입력하고 목록으로 관리할 수 있습니다.<br />
+        데이터는 브라우저에 저장되며, 새로고침해도 유지됩니다.
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>반품 접수 입력</h2>
+          <span>신규 / 수정</span>
+        </div>
+
+        <div class="form-area">
+          <div class="form-grid">
+            <div class="two-col">
+              <div class="field">
+                <label for="returnDate">접수일</label>
+                <input type="date" id="returnDate" />
+              </div>
+              <div class="field">
+                <label for="status">처리상태</label>
+                <select id="status">
+                  <option value="접수">접수</option>
+                  <option value="확인중">확인중</option>
+                  <option value="교환완료">교환완료</option>
+                  <option value="환불완료">환불완료</option>
+                  <option value="보류">보류</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="company">상호명</label>
+              <input type="text" id="company" placeholder="예: 카페아울렛" />
+            </div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="customer">고객명</label>
+                <input type="text" id="customer" placeholder="예: 홍길동" />
+              </div>
+              <div class="field">
+                <label for="phone">연락처</label>
+                <input type="text" id="phone" placeholder="예: 010-1234-5678" />
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="orderChannel">주문처</label>
+                <input type="text" id="orderChannel" placeholder="예: 스마트스토어" />
+              </div>
+              <div class="field">
+                <label for="quantity">수량</label>
+                <input type="text" id="quantity" placeholder="예: 2박스" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="itemName">물품명</label>
+              <input type="text" id="itemName" placeholder="예: PET 투명컵 16온스 92파이" />
+            </div>
+
+            <div class="field">
+              <label for="reason">반품 사유</label>
+              <textarea id="reason" placeholder="예: 제품 파손 / 오출고 / 불량 등"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="memo">메모</label>
+              <textarea id="memo" placeholder="추가 메모가 있으면 입력하세요."></textarea>
+            </div>
+
+            <div class="btn-row">
+              <button class="primary-btn" id="saveBtn" type="button">저장하기</button>
+              <button class="secondary-btn" id="resetBtn" type="button">초기화</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-area">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>반품 목록</h2>
+            <span id="countText">총 0건</span>
+          </div>
+
+          <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="상호명 / 고객명 / 물품명 / 사유 검색" />
+            <select id="filterStatus">
+              <option value="전체">전체 상태</option>
+              <option value="접수">접수</option>
+              <option value="확인중">확인중</option>
+              <option value="교환완료">교환완료</option>
+              <option value="환불완료">환불완료</option>
+              <option value="보류">보류</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <div id="emptyBox" class="empty-box">아직 등록된 반품 내역이 없습니다.<br />왼쪽 입력폼에서 반품 접수를 먼저 등록해 주세요.</div>
+
+            <table id="dataTable" style="display:none;">
+              <thead>
+                <tr>
+                  <th>접수일</th>
+                  <th>상태</th>
+                  <th>상호명</th>
+                  <th>고객명</th>
+                  <th>연락처</th>
+                  <th>주문처</th>
+                  <th>물품명</th>
+                  <th>수량</th>
+                  <th>반품 사유</th>
+                  <th>메모</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="small-note">
+            ※ 수정 버튼으로 기존 내역을 다시 불러올 수 있습니다. 삭제는 목록에서 바로 가능합니다.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "business_tools_return_list";
+    let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let editingId = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    const fields = {
+      returnDate: $("returnDate"),
+      status: $("status"),
+      company: $("company"),
+      customer: $("customer"),
+      phone: $("phone"),
+      orderChannel: $("orderChannel"),
+      quantity: $("quantity"),
+      itemName: $("itemName"),
+      reason: $("reason"),
+      memo: $("memo")
+    };
+
+    function saveStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function resetForm() {
+      editingId = null;
+      fields.returnDate.value = "";
+      fields.status.value = "접수";
+      fields.company.value = "";
+      fields.customer.value = "";
+      fields.phone.value = "";
+      fields.orderChannel.value = "";
+      fields.quantity.value = "";
+      fields.itemName.value = "";
+      fields.reason.value = "";
+      fields.memo.value = "";
+      $("saveBtn").textContent = "저장하기";
+    }
+
+    function getFormData() {
+      return {
+        id: editingId || Date.now(),
+        returnDate: fields.returnDate.value,
+        status: fields.status.value,
+        company: fields.company.value.trim(),
+        customer: fields.customer.value.trim(),
+        phone: fields.phone.value.trim(),
+        orderChannel: fields.orderChannel.value.trim(),
+        quantity: fields.quantity.value.trim(),
+        itemName: fields.itemName.value.trim(),
+        reason: fields.reason.value.trim(),
+        memo: fields.memo.value.trim()
+      };
+    }
+
+    function validateForm(data) {
+      if (!data.returnDate) {
+        alert("접수일을 입력해 주세요.");
+        fields.returnDate.focus();
+        return false;
+      }
+      if (!data.company) {
+        alert("상호명을 입력해 주세요.");
+        fields.company.focus();
+        return false;
+      }
+      if (!data.itemName) {
+        alert("물품명을 입력해 주세요.");
+        fields.itemName.focus();
+        return false;
+      }
+      if (!data.reason) {
+        alert("반품 사유를 입력해 주세요.");
+        fields.reason.focus();
+        return false;
+      }
+      return true;
+    }
+
+    function renderTable() {
+      const keyword = $("searchInput").value.trim().toLowerCase();
+      const filterStatus = $("filterStatus").value;
+
+      const filtered = entries.filter((item) => {
+        const statusMatch = filterStatus === "전체" || item.status === filterStatus;
+        const textTarget = [
+          item.company,
+          item.customer,
+          item.phone,
+          item.orderChannel,
+          item.itemName,
+          item.reason,
+          item.memo
+        ].join(" ").toLowerCase();
+
+        const keywordMatch = !keyword || textTarget.includes(keyword);
+        return statusMatch && keywordMatch;
+      });
+
+      $("countText").textContent = `총 ${filtered.length}건`;
+
+      const tbody = $("tableBody");
+      tbody.innerHTML = "";
+
+      if (filtered.length === 0) {
+        $("emptyBox").style.display = "block";
+        $("dataTable").style.display = "none";
+        return;
+      }
+
+      $("emptyBox").style.display = "none";
+      $("dataTable").style.display = "table";
+
+      filtered
+        .sort((a, b) => Number(b.id) - Number(a.id))
+        .forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHtml(item.returnDate || "")}</td>
+            <td><span class="status-badge status-${escapeClass(item.status)}">${escapeHtml(item.status || "")}</span></td>
+            <td>${escapeHtml(item.company || "")}</td>
+            <td>${escapeHtml(item.customer || "")}</td>
+            <td>${escapeHtml(item.phone || "")}</td>
+            <td>${escapeHtml(item.orderChannel || "")}</td>
+            <td>${escapeHtml(item.itemName || "")}</td>
+            <td>${escapeHtml(item.quantity || "")}</td>
+            <td>${escapeHtml(item.reason || "")}</td>
+            <td>${escapeHtml(item.memo || "")}</td>
+            <td>
+              <button class="action-btn edit-btn" type="button" onclick="editEntry(${item.id})">수정</button>
+              <button class="action-btn delete-btn" type="button" onclick="deleteEntry(${item.id})">삭제</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+    }
+
+    function editEntry(id) {
+      const item = entries.find((entry) => entry.id === id);
+      if (!item) return;
+
+      editingId = id;
+      fields.returnDate.value = item.returnDate || "";
+      fields.status.value = item.status || "접수";
+      fields.company.value = item.company || "";
+      fields.customer.value = item.customer || "";
+      fields.phone.value = item.phone || "";
+      fields.orderChannel.value = item.orderChannel || "";
+      fields.quantity.value = item.quantity || "";
+      fields.itemName.value = item.itemName || "";
+      fields.reason.value = item.reason || "";
+      fields.memo.value = item.memo || "";
+
+      $("saveBtn").textContent = "수정 저장";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteEntry(id) {
+      if (!confirm("해당 반품 내역을 삭제할까요?")) return;
+      entries = entries.filter((entry) => entry.id !== id);
+      saveStorage();
+      renderTable();
+
+      if (editingId === id) {
+        resetForm();
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function escapeClass(value) {
+      return String(value).replace(/\s+/g, "");
+    }
+
+    $("saveBtn").addEventListener("click", () => {
+      const data = getFormData();
+      if (!validateForm(data)) return;
+
+      if (editingId) {
+        entries = entries.map((entry) => entry.id === editingId ? data : entry);
+      } else {
+        entries.push(data);
+      }
+
+      saveStorage();
+      renderTable();
+      resetForm();
+    });
+
+    $("resetBtn").addEventListener("click", resetForm);
+    $("searchInput").addEventListener("input", renderTable);
+    $("filterStatus").addEventListener("change", renderTable);
+
+    window.editEntry = editEntry;
+    window.deleteEntry = deleteEntry;
+
+    renderTable();
+  </script>
+</body>
+</html>
