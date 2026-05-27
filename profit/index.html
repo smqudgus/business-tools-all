@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>이익율 계산기</title>
+
   <style>
     :root {
       --bg1: #dfeaff;
@@ -18,7 +19,9 @@
       --success: #0f9f6e;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -41,11 +44,18 @@
       z-index: 1;
     }
 
-    .top-link {
+    .top-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .nav-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
+      justify-content: center;
+      min-height: 42px;
       padding: 10px 16px;
       border-radius: 999px;
       text-decoration: none;
@@ -55,44 +65,23 @@
       background: rgba(255,255,255,0.42);
       border: 1px solid rgba(255,255,255,0.52);
       box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: 0.18s ease;
     }
-.top-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
 
-.nav-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 42px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  text-decoration: none;
-  color: #40506c;
-  font-size: 13px;
-  font-weight: 900;
-  background: rgba(255,255,255,0.42);
-  border: 1px solid rgba(255,255,255,0.52);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: 0.18s ease;
-}
+    .nav-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.58);
+    }
 
-.nav-btn:hover {
-  transform: translateY(-1px);
-  background: rgba(255,255,255,0.58);
-}
+    .nav-btn.active {
+      background: var(--orange);
+      color: #ffffff;
+      border-color: rgba(255, 66, 0, 0.35);
+      box-shadow: 0 10px 24px rgba(255, 66, 0, 0.2);
+    }
 
-.nav-btn.active {
-  background: #ff4200;
-  color: #ffffff;
-  border-color: rgba(255, 66, 0, 0.35);
-  box-shadow: 0 10px 24px rgba(255, 66, 0, 0.2);
-}
     .hero,
     .panel,
     .result-card {
@@ -112,10 +101,12 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg,
+      background: linear-gradient(
+        135deg,
         rgba(255,255,255,0.38) 0%,
         rgba(255,255,255,0.08) 42%,
-        rgba(255,255,255,0.03) 100%);
+        rgba(255,255,255,0.03) 100%
+      );
       pointer-events: none;
     }
 
@@ -230,6 +221,7 @@
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
       gap: 22px;
+      align-items: start;
     }
 
     .panel-head {
@@ -274,6 +266,8 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
+      position: relative;
+      z-index: 1;
     }
 
     .field {
@@ -282,6 +276,7 @@
       gap: 8px;
     }
 
+    .product-name-field,
     .fee-mode-field {
       grid-column: 1 / -1;
     }
@@ -296,7 +291,8 @@
       position: relative;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       height: 54px;
       border-radius: 18px;
@@ -321,7 +317,8 @@
       font-weight: 650;
     }
 
-    input:focus, select:focus {
+    input:focus,
+    select:focus {
       border-color: rgba(255,255,255,0.98);
       background: rgba(255,255,255,0.52);
       box-shadow:
@@ -382,17 +379,38 @@
       border-bottom: 0;
     }
 
+    .calc-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .save-btn,
+    .excel-btn,
     .reset-btn {
       width: 100%;
       height: 54px;
       margin-top: 8px;
       border: 0;
       border-radius: 999px;
-      background: #111111;
       color: #ffffff;
       font-size: 15px;
       font-weight: 950;
       cursor: pointer;
+    }
+
+    .save-btn {
+      background: var(--orange);
+      box-shadow: 0 10px 24px rgba(255, 66, 0, 0.2);
+    }
+
+    .excel-btn {
+      background: var(--success);
+      box-shadow: 0 10px 24px rgba(15, 159, 110, 0.18);
+    }
+
+    .reset-btn {
+      background: #111111;
     }
 
     .notice {
@@ -407,8 +425,140 @@
       word-break: keep-all;
     }
 
-    .negative { color: var(--danger) !important; }
-    .positive { color: var(--success) !important; }
+    .negative {
+      color: var(--danger) !important;
+    }
+
+    .positive {
+      color: var(--success) !important;
+    }
+
+    .history-panel {
+      margin-top: 22px;
+    }
+
+    .history-head {
+      padding: 24px 26px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .history-head h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.6px;
+    }
+
+    .history-head span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .history-wrap {
+      padding: 0 26px 26px;
+      position: relative;
+      z-index: 1;
+      overflow-x: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.36);
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.26);
+      font-size: 14px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .history-table th {
+      color: #4d5f7a;
+      font-size: 13px;
+      font-weight: 950;
+      background: rgba(255,255,255,0.24);
+    }
+
+    .history-table td {
+      color: #25324a;
+      font-weight: 700;
+    }
+
+    .history-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .history-profit {
+      color: var(--success) !important;
+      font-weight: 950 !important;
+    }
+
+    .history-loss {
+      color: var(--danger) !important;
+      font-weight: 950 !important;
+    }
+
+    .delete-history-btn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: #111111;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .page-btn {
+      min-width: 38px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,0.52);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.42);
+      color: #40506c;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .page-btn.active {
+      background: var(--orange);
+      color: #ffffff;
+      border-color: rgba(255,66,0,0.35);
+    }
+
+    .empty-history {
+      padding: 26px;
+      text-align: center;
+      color: #60708a;
+      font-size: 14px;
+      line-height: 1.7;
+      background: rgba(255,255,255,0.22);
+      border: 1px dashed rgba(255,255,255,0.45);
+      border-radius: 22px;
+    }
 
     @media (max-width: 960px) {
       .hero-grid,
@@ -434,7 +584,8 @@
         padding: 24px;
       }
 
-      .panel-head {
+      .panel-head,
+      .history-head {
         align-items: flex-start;
         flex-direction: column;
       }
@@ -450,24 +601,28 @@
         padding-right: 18px;
       }
 
-      .summary {
+      .summary,
+      .history-wrap {
         padding-left: 18px;
         padding-right: 18px;
       }
 
-      .profit-box {
+      .profit-box,
+      .calc-actions {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
+
 <body>
   <main class="wrap">
-<nav class="top-nav">
-  <a class="nav-btn" href="../">← 메인</a>
-  <a class="nav-btn" href="../return/">반품리스트 관리</a>
-  <a class="nav-btn active" href="../profit/">이익율 계산기</a>
-</nav>
+    <nav class="top-nav">
+      <a class="nav-btn" href="../">← 메인</a>
+      <a class="nav-btn" href="../return/">반품리스트 관리</a>
+      <a class="nav-btn active" href="../profit/">이익율 계산기</a>
+    </nav>
+
     <section class="hero-grid">
       <div class="hero">
         <div class="badge">📊 판매가 기준 자동 계산</div>
@@ -483,6 +638,7 @@
           <div class="result-label">최종 마진율</div>
           <div class="margin-rate" id="marginRate">0.0%</div>
         </div>
+
         <div class="profit-box">
           <div class="mini-result">
             <span>순이익</span>
@@ -504,6 +660,14 @@
         </div>
 
         <div class="form-grid">
+          <div class="field product-name-field">
+            <label for="productName">상품명</label>
+            <div class="input-wrap">
+              <input id="productName" type="text" placeholder="예: PET 투명컵 16온스 92파이" />
+            </div>
+            <div class="help">계산 내역에 남길 상품명을 입력하세요.</div>
+          </div>
+
           <div class="field">
             <label for="purchasePrice">매입가</label>
             <div class="input-wrap">
@@ -601,7 +765,13 @@
             <div class="sum-row"><span>총 수수료</span><strong id="totalFeeWon">0원</strong></div>
             <div class="sum-row"><span>손익 상태</span><strong id="profitStatus">입력 대기</strong></div>
           </div>
-          <button class="reset-btn" type="button" id="resetBtn">초기화</button>
+
+          <div class="calc-actions">
+            <button class="save-btn" type="button" id="saveHistoryBtn">내역 저장</button>
+            <button class="excel-btn" type="button" id="excelBtn">엑셀 다운로드</button>
+            <button class="reset-btn" type="button" id="resetBtn">초기화</button>
+          </div>
+
           <div class="notice">
             ※ 마진율 = 순이익 ÷ 판매가 × 100 기준입니다.<br />
             ※ 조건 무료배송은 고객에게만 무료로 적용되며, 판매자 부담 배송료는 비용에 포함됩니다.<br />
@@ -610,13 +780,75 @@
         </div>
       </div>
     </section>
+
+    <section class="panel history-panel">
+      <div class="history-head">
+        <h2>계산 저장 내역</h2>
+        <span id="historyCount">총 0건</span>
+      </div>
+
+      <div class="history-wrap">
+        <div id="emptyHistory" class="empty-history">
+          아직 저장된 계산 내역이 없습니다.<br />
+          상품명과 계산값을 입력한 뒤 <strong>내역 저장</strong> 버튼을 눌러주세요.
+        </div>
+
+        <table id="historyTable" class="history-table" style="display:none;">
+          <thead>
+            <tr>
+              <th>저장일</th>
+              <th>상품명</th>
+              <th>매입가</th>
+              <th>판매가</th>
+              <th>배송료</th>
+              <th>포장비</th>
+              <th>기타</th>
+              <th>수수료</th>
+              <th>총 비용</th>
+              <th>순이익</th>
+              <th>마진율</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </section>
   </main>
 
   <script>
     const ids = [
-      "purchasePrice", "salePrice", "shippingFee", "freeShippingLimit",
-      "packingCost", "etcCost", "marketFee", "cardFee", "feeMode"
+      "purchasePrice",
+      "salePrice",
+      "shippingFee",
+      "freeShippingLimit",
+      "packingCost",
+      "etcCost",
+      "marketFee",
+      "cardFee",
+      "feeMode",
+      "productName"
     ];
+
+    const numberInputIds = [
+      "purchasePrice",
+      "salePrice",
+      "shippingFee",
+      "freeShippingLimit",
+      "packingCost",
+      "etcCost",
+      "marketFee",
+      "cardFee"
+    ];
+
+    const STORAGE_KEY = "profit_calculator_history";
+    const PER_PAGE = 5;
+
+    let currentPage = 1;
+    let latestResult = {};
+    let historyList = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     const $ = (id) => document.getElementById(id);
 
@@ -630,17 +862,26 @@
       return rounded.toLocaleString("ko-KR") + "원";
     };
 
+    const formatRate = (num) => {
+      return Number(num || 0).toFixed(1) + "%";
+    };
+
     const formatInput = (input) => {
+      if (!numberInputIds.includes(input.id)) return;
+
       const raw = input.value;
+
       if (input.id === "marketFee" || input.id === "cardFee") {
         input.value = raw.replace(/[^0-9.]/g, "");
         return;
       }
+
       const number = toNumber(raw);
       input.value = number ? number.toLocaleString("ko-KR") : "";
     };
 
     function calculate() {
+      const productName = $("productName").value.trim();
       const purchasePrice = toNumber($("purchasePrice").value);
       const salePrice = toNumber($("salePrice").value);
       const shippingFee = toNumber($("shippingFee").value);
@@ -658,7 +899,26 @@
       const netProfit = salePrice - totalCost;
       const marginRate = salePrice > 0 ? (netProfit / salePrice) * 100 : 0;
 
-      $("marginRate").textContent = marginRate.toFixed(1) + "%";
+      latestResult = {
+        id: Date.now(),
+        savedAt: new Date().toLocaleString("ko-KR"),
+        productName: productName || "상품명 미입력",
+        purchasePrice,
+        salePrice,
+        shippingFee,
+        packingCost,
+        etcCost,
+        marketFeeRate,
+        cardFeeRate,
+        marketFeeWon,
+        cardFeeWon,
+        totalFee,
+        totalCost,
+        netProfit,
+        marginRate
+      };
+
+      $("marginRate").textContent = formatRate(marginRate);
       $("netProfit").textContent = formatWon(netProfit);
       $("totalCost").textContent = formatWon(totalCost);
       $("appliedShipping").textContent = formatWon(appliedShipping);
@@ -682,6 +942,148 @@
       }
     }
 
+    function saveHistory() {
+      if (!latestResult.salePrice) {
+        alert("판매가를 입력한 뒤 저장해 주세요.");
+        $("salePrice").focus();
+        return;
+      }
+
+      const item = {
+        ...latestResult,
+        id: Date.now(),
+        savedAt: new Date().toLocaleString("ko-KR")
+      };
+
+      historyList.unshift(item);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historyList));
+
+      currentPage = 1;
+      renderHistory();
+      alert("계산 내역이 저장되었습니다.");
+    }
+
+    function renderHistory() {
+      const total = historyList.length;
+      $("historyCount").textContent = `총 ${total}건`;
+
+      const empty = $("emptyHistory");
+      const table = $("historyTable");
+      const tbody = $("historyBody");
+      const pagination = $("pagination");
+
+      tbody.innerHTML = "";
+      pagination.innerHTML = "";
+
+      if (total === 0) {
+        empty.style.display = "block";
+        table.style.display = "none";
+        return;
+      }
+
+      empty.style.display = "none";
+      table.style.display = "table";
+
+      const totalPages = Math.ceil(total / PER_PAGE);
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = historyList.slice(start, start + PER_PAGE);
+
+      pageItems.forEach((item) => {
+        const tr = document.createElement("tr");
+        const profitClass = item.netProfit < 0 ? "history-loss" : "history-profit";
+
+        tr.innerHTML = `
+          <td>${escapeHtml(item.savedAt)}</td>
+          <td>${escapeHtml(item.productName)}</td>
+          <td>${formatWon(item.purchasePrice)}</td>
+          <td>${formatWon(item.salePrice)}</td>
+          <td>${formatWon(item.shippingFee)}</td>
+          <td>${formatWon(item.packingCost)}</td>
+          <td>${formatWon(item.etcCost)}</td>
+          <td>${formatWon(item.totalFee)}</td>
+          <td>${formatWon(item.totalCost)}</td>
+          <td class="${profitClass}">${formatWon(item.netProfit)}</td>
+          <td>${formatRate(item.marginRate)}</td>
+          <td><button class="delete-history-btn" type="button" onclick="deleteHistory(${item.id})">삭제</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `page-btn ${i === currentPage ? "active" : ""}`;
+        btn.textContent = i;
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          renderHistory();
+        });
+        pagination.appendChild(btn);
+      }
+    }
+
+    function deleteHistory(id) {
+      if (!confirm("해당 계산 내역을 삭제할까요?")) return;
+      historyList = historyList.filter((item) => item.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historyList));
+      renderHistory();
+    }
+
+    function downloadExcel() {
+      if (historyList.length === 0) {
+        alert("다운로드할 계산 내역이 없습니다.");
+        return;
+      }
+
+      const rows = [
+        ["저장일", "상품명", "매입가", "판매가", "배송료", "포장비", "기타", "오픈마켓 수수료율", "카드 수수료율", "총 수수료", "총 비용", "순이익", "마진율"]
+      ];
+
+      historyList.forEach((item) => {
+        rows.push([
+          item.savedAt,
+          item.productName,
+          Math.round(item.purchasePrice),
+          Math.round(item.salePrice),
+          Math.round(item.shippingFee),
+          Math.round(item.packingCost),
+          Math.round(item.etcCost),
+          item.marketFeeRate + "%",
+          item.cardFeeRate + "%",
+          Math.round(item.totalFee),
+          Math.round(item.totalCost),
+          Math.round(item.netProfit),
+          item.marginRate.toFixed(1) + "%"
+        ]);
+      });
+
+      const csvContent = "\uFEFF" + rows
+        .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "이익율_계산내역.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
     ids.forEach((id) => {
       const el = $(id);
       el.addEventListener("input", () => {
@@ -691,6 +1093,9 @@
       el.addEventListener("change", calculate);
     });
 
+    $("saveHistoryBtn").addEventListener("click", saveHistory);
+    $("excelBtn").addEventListener("click", downloadExcel);
+
     $("resetBtn").addEventListener("click", () => {
       ids.forEach((id) => {
         if ($(id).tagName === "INPUT") $(id).value = "";
@@ -699,7 +1104,10 @@
       calculate();
     });
 
+    window.deleteHistory = deleteHistory;
+
     calculate();
+    renderHistory();
   </script>
 </body>
 </html>
