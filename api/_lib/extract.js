@@ -7,25 +7,35 @@ function cleanNumber(raw){
   return n;
 }
 
-function choosePrice(candidates, product={}){
-  const arr=[...new Set(candidates.map(Number))]
+function normalizeCandidates(candidates){
+  return [...new Set(candidates.map(Number))]
     .filter(n=>Number.isFinite(n)&&n>=1000&&n<=100000000)
     .sort((a,b)=>a-b);
+}
+
+function choosePrice(candidates, product={}){
+  const arr=normalizeCandidates(candidates);
+  if(!arr.length) return null;
 
   const cost=Number(product.cost||0);
   const our=Number(product.our_price||0);
 
-  // 핵심 수정: 배송비/무료배송 기준금액/혜택금액 같은 숫자 제외
   const min=cost>0?Math.floor(cost*0.95):1000;
   const max=our>0?Math.ceil(our*1.5):100000000;
 
   const filtered=arr.filter(n=>n>=min&&n<=max);
-  return filtered.length?filtered[0]:null;
+  if(!filtered.length) return null;
+
+  if(our>0){
+    return filtered.slice().sort((a,b)=>Math.abs(a-our)-Math.abs(b-our))[0];
+  }
+  return filtered[0];
 }
 
 function extractPrice(html,url='',product={}){
   const $=cheerio.load(html);
   const candidates=[];
+  const totalCandidates=[];
 
   $('script[type="application/ld+json"]').each((_,el)=>{
     try{
@@ -52,6 +62,23 @@ function extractPrice(html,url='',product={}){
   const bodyText=$('body').text().replace(/\s+/g,' ');
   const htmlText=html.replace(/\s+/g,' ');
 
+  // 모든 판매처 공통 기준: 총 합계 금액/합계 금액/결제 금액이 HTML에 있으면 이 값을 최우선으로 사용
+  const totalPatterns=[
+    /(?:총\s*합계\s*금액|총합계금액|합계\s*금액|합계금액|총\s*결제\s*금액|결제\s*예정\s*금액)\D{0,120}(\d{1,3}(?:,\d{3})+|\d{4,8})\s*원/gi,
+    /(?:total\s*price|total\s*amount|pay\s*amount)\D{0,120}(\d{1,3}(?:,\d{3})+|\d{4,8})/gi
+  ];
+
+  for(const pattern of totalPatterns){
+    let m;
+    while((m=pattern.exec(bodyText))!==null) totalCandidates.push(cleanNumber(m[1]));
+    while((m=pattern.exec(htmlText))!==null) totalCandidates.push(cleanNumber(m[1]));
+  }
+
+  const totalPrice=choosePrice(totalCandidates.filter(Boolean),product);
+  if(totalPrice){
+    return {price:totalPrice,confidence:'auto-total',note:'총 합계 금액/결제 금액 기준 자동 추출'};
+  }
+
   const strong=/(?:판매가|할인가|쿠팡판매가|즉시할인가|상품금액|구매가|price|salePrice|discountPrice|discountedPrice|finalPrice|lowPrice)\D{0,80}(\d{1,3}(?:,\d{3})+|\d{4,8})/gi;
   let m;
   while((m=strong.exec(bodyText))!==null) candidates.push(cleanNumber(m[1]));
@@ -61,6 +88,7 @@ function extractPrice(html,url='',product={}){
   while((m=weak.exec(bodyText))!==null) candidates.push(cleanNumber(m[1]));
 
   const price=choosePrice(candidates.filter(Boolean),product);
+
   if(!price){
     const cost=Number(product.cost||0);
     const our=Number(product.our_price||0);
@@ -68,6 +96,7 @@ function extractPrice(html,url='',product={}){
     const max=our>0?Math.ceil(our*1.5):100000000;
     return {price:null,confidence:'fail',note:`정상 범위 가격을 찾지 못했습니다. 허용범위 ${min.toLocaleString('ko-KR')}~${max.toLocaleString('ko-KR')}원`};
   }
+
   return {price,confidence:'auto',note:'자동 추출'};
 }
 
@@ -82,4 +111,5 @@ async function fetchAndExtract(url,product={}){
   const html=await res.text();
   return extractPrice(html,url,product);
 }
+
 module.exports={fetchAndExtract,extractPrice};
