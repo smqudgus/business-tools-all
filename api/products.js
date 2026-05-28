@@ -9,8 +9,8 @@ function isValidDisplayPrice(product, price) {
   const our = Number(product.our_price || 0);
 
   // 기존에 잘못 저장된 배송비 3,000원 같은 기록을 화면/최신가에서 제외
-  const min = cost > 0 ? Math.floor(cost * 0.5) : 1000;
-  const max = our > 0 ? Math.ceil(our * 3) : 100000000;
+  const min = cost > 0 ? Math.floor(cost * 0.95) : 1000;
+  const max = our > 0 ? Math.ceil(our * 1.5) : 100000000;
 
   return n >= min && n <= max;
 }

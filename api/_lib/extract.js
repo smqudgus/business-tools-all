@@ -15,9 +15,9 @@ function choosePrice(candidates, product={}){
   const cost=Number(product.cost||0);
   const our=Number(product.our_price||0);
 
-  // 핵심 수정: 배송비 3,000원 같은 숫자 제외
-  const min=cost>0?Math.floor(cost*0.5):1000;
-  const max=our>0?Math.ceil(our*3):100000000;
+  // 핵심 수정: 배송비/무료배송 기준금액/혜택금액 같은 숫자 제외
+  const min=cost>0?Math.floor(cost*0.95):1000;
+  const max=our>0?Math.ceil(our*1.5):100000000;
 
   const filtered=arr.filter(n=>n>=min&&n<=max);
   return filtered.length?filtered[0]:null;
@@ -64,8 +64,8 @@ function extractPrice(html,url='',product={}){
   if(!price){
     const cost=Number(product.cost||0);
     const our=Number(product.our_price||0);
-    const min=cost>0?Math.floor(cost*0.5):1000;
-    const max=our>0?Math.ceil(our*3):100000000;
+    const min=cost>0?Math.floor(cost*0.95):1000;
+    const max=our>0?Math.ceil(our*1.5):100000000;
     return {price:null,confidence:'fail',note:`정상 범위 가격을 찾지 못했습니다. 허용범위 ${min.toLocaleString('ko-KR')}~${max.toLocaleString('ko-KR')}원`};
   }
   return {price,confidence:'auto',note:'자동 추출'};
