@@ -2,9 +2,6 @@
   "name": "business-tools-all",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "start": "vercel dev"
-  },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "cheerio": "^1.0.0"
