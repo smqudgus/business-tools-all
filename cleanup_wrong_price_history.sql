@@ -1,4 +1,4 @@
--- v14 잘못 저장된 가격 기록 삭제용 SQL
+-- v15 잘못 저장된 가격 기록 삭제용 SQL
 -- 아임요 배 베이스 빅커피 6,000원 오수집 기록 제거
 
 delete from price_history ph

@@ -17,7 +17,7 @@ function priceRange(product={}){
   const cost=Number(product.cost||0);
   const our=Number(product.our_price||0);
   const min=cost>0?Math.floor(cost*0.95):1000;
-  const max=our>0?Math.ceil(our*1.5):100000000;
+  const max=our>0?Math.ceil(our*1.7):100000000;
   return {min,max,our};
 }
 
@@ -51,6 +51,21 @@ function chooseTrustedNaverPrice(candidates, product={}){
     return filtered.slice().sort((a,b)=>Math.abs(a-our)-Math.abs(b-our))[0];
   }
   return filtered[0];
+}
+
+
+// 총 합계금액/결제금액 후보는 우리 판매가와 가까운 값이 아니라,
+// 정상 범위 안에서 가장 큰 값을 우선 선택합니다.
+// 예: 6,000원과 10,380원이 같이 잡히면 실제 총합계인 10,380원을 선택.
+function chooseTotalAmountPrice(candidates, product={}){
+  const arr=normalizeCandidates(candidates);
+  if(!arr.length) return null;
+
+  const {min,max}=priceRange(product);
+  const filtered=arr.filter(n=>n>=min&&n<=max);
+  if(!filtered.length) return null;
+
+  return filtered.slice().sort((a,b)=>b-a)[0];
 }
 
 function extractPrice(html,url='',product={}){
@@ -136,7 +151,7 @@ function extractPrice(html,url='',product={}){
     while((m=pattern.exec(htmlText))!==null) totalCandidates.push(cleanNumber(m[1]));
   }
 
-  const totalPrice=choosePrice(totalCandidates.filter(Boolean),product);
+  const totalPrice=chooseTotalAmountPrice(totalCandidates.filter(Boolean),product);
   if(totalPrice){
     return {price:totalPrice,confidence:'auto-total',note:'총 합계 금액/결제 금액 기준 자동 추출'};
   }
