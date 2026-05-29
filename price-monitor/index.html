@@ -30,8 +30,35 @@ let products=[],selectedId=null;const sellers=[["메가커피","mega"],["빅커�
 function el(id){return document.getElementById(id)}function won(v){return v==null||v===""?"-":Number(v).toLocaleString("ko-KR")+"원"}function parseNum(v){if(!v)return null;const n=Number(String(v).replaceAll(",","").replaceAll("원","").trim());return Number.isFinite(n)?n:null}function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}function priceClass(price,ours){return price!=null&&Number(price)<Number(ours)?"danger":""}
 async function api(path,options={}){const res=await fetch(path,{headers:{"Content-Type":"application/json"},...options});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"API 오류");return data}
 async function load(){try{el("apiStatus").textContent="DB 연결 성공";const data=await api("/api/products");products=data.products||[];if(!selectedId&&products[0])selectedId=products[0].id;renderAll()}catch(e){el("apiStatus").textContent="DB 연결 실패: "+e.message}}
-function latest(p,key){return p.latest?.[key]?.price??null}function activePrices(p){return sellers.map(([seller,key])=>({seller,key,price:latest(p,key)})).filter(x=>x.price!=null)}function lowestInfo(p){const arr=activePrices(p);if(!arr.length)return{seller:"-",price:null};return arr.reduce((a,b)=>Number(a.price)<=Number(b.price)?a:b)}function margin(p){if(!p.our_price||!p.cost)return"-";return(((p.our_price-p.cost)/p.our_price)*100).toFixed(1)+"%"}function status(p){const low=lowestInfo(p).price;if(low==null)return{text:"확인필요",cls:"adjust"};return p.our_price>low?{text:"경고",cls:"warn"}:{text:"양호",cls:"good"}}
-function renderRows(){const q=el("searchInput").value.trim();el("productRows").innerHTML=products.filter(p=>p.name.includes(q)).map(p=>{const s=status(p);return`<tr class="${p.id===selectedId?"active":""}" onclick="selectProduct('${p.id}')"><td class="name">${esc(p.name)}</td><td class="right">${won(p.cost)}</td><td class="right">${won(p.our_price)}</td><td class="right ${priceClass(latest(p,"mega"),p.our_price)}">${won(latest(p,"mega"))}</td><td class="right ${priceClass(latest(p,"big"),p.our_price)}">${won(latest(p,"big"))}</td><td class="right ${priceClass(latest(p,"coupang"),p.our_price)}">${won(latest(p,"coupang"))}</td><td class="right ${priceClass(latest(p,"naver"),p.our_price)}">${won(latest(p,"naver"))}</td><td><span class="status ${s.cls}">${s.text}</span></td></tr>`}).join("")||`<tr><td colspan="8">등록된 상품이 없습니다.</td></tr>`}
+function latestRow(p,key){return p.latest?.[key]||null}
+function latest(p,key){return latestRow(p,key)?.price??null}
+function failLabel(note){
+  const s=String(note||"");
+  if(s.includes("HTTP 429")) return "수집실패(429)";
+  if(s.includes("HTTP 403")) return "수집실패(403)";
+  if(s.includes("HTTP")) return "수집실패";
+  return "수집실패";
+}
+function sellerCell(p,key){
+  const row=latestRow(p,key);
+  if(row&&row.price!=null)return won(row.price);
+  if(row&&row.note)return failLabel(row.note);
+  return "미수집";
+}
+function sellerCellClass(p,key){
+  const row=latestRow(p,key);
+  if(row&&row.price!=null)return priceClass(row.price,p.our_price);
+  if(row&&row.note)return "fail-text";
+  return "muted";
+}
+function sellerCellTitle(p,key){
+  const row=latestRow(p,key);
+  if(!row)return "아직 수집 기록이 없습니다.";
+  if(row.price!=null)return "";
+  return row.note||"가격을 수집하지 못했습니다.";
+}
+function activePrices(p){return sellers.map(([seller,key])=>({seller,key,price:latest(p,key)})).filter(x=>x.price!=null)}function lowestInfo(p){const arr=activePrices(p);if(!arr.length)return{seller:"-",price:null};return arr.reduce((a,b)=>Number(a.price)<=Number(b.price)?a:b)}function margin(p){if(!p.our_price||!p.cost)return"-";return(((p.our_price-p.cost)/p.our_price)*100).toFixed(1)+"%"}function status(p){const low=lowestInfo(p).price;if(low==null)return{text:"확인필요",cls:"adjust"};return p.our_price>low?{text:"경고",cls:"warn"}:{text:"양호",cls:"good"}}
+function renderRows(){const q=el("searchInput").value.trim();el("productRows").innerHTML=products.filter(p=>p.name.includes(q)).map(p=>{const s=status(p);return`<tr class="${p.id===selectedId?"active":""}" onclick="selectProduct('${p.id}')"><td class="name">${esc(p.name)}</td><td class="right">${won(p.cost)}</td><td class="right">${won(p.our_price)}</td><td class="right ${sellerCellClass(p,"mega")}" title="${esc(sellerCellTitle(p,"mega"))}">${sellerCell(p,"mega")}</td><td class="right ${sellerCellClass(p,"big")}" title="${esc(sellerCellTitle(p,"big"))}">${sellerCell(p,"big")}</td><td class="right ${sellerCellClass(p,"coupang")}" title="${esc(sellerCellTitle(p,"coupang"))}">${sellerCell(p,"coupang")}</td><td class="right ${sellerCellClass(p,"naver")}" title="${esc(sellerCellTitle(p,"naver"))}">${sellerCell(p,"naver")}</td><td><span class="status ${s.cls}">${s.text}</span></td></tr>`}).join("")||`<tr><td colspan="8">등록된 상품이 없습니다.</td></tr>`}
 function renderDetail(){const p=products.find(x=>x.id===selectedId);if(!p)return;const low=lowestInfo(p);el("detailName").textContent=p.name;el("detailOur").textContent=won(p.our_price);el("detailSeller").textContent=low.seller;el("detailLowest").textContent=won(low.price);el("detailDiff").textContent=low.price==null?"-":won(p.our_price-low.price);el("detailMargin").textContent=margin(p);el("urlList").innerHTML=sellers.map(([label,key])=>{const url=p.links?.[key]||"";if(!url)return`<div><span>${label}</span><span>미등록</span></div>`;if(url==="판매안함")return`<div><span>${label}</span><span>판매안함</span></div>`;return`<a href="${esc(url)}" target="_blank"><span>${label}</span><span>열기 ↗</span></a>`}).join("");renderHistory(p);renderChanges(p)}
 function renderHistory(p){const days={};(p.history||[]).forEach(h=>{if(h.price==null)return;const d=(h.checked_at||"").slice(0,10);if(!days[d])days[d]={date:d,ours:p.our_price};days[d][h.seller_key]=h.price});el("historyRows").innerHTML=Object.values(days).sort((a,b)=>a.date.localeCompare(b.date)).map(row=>`<tr><td>${row.date.replaceAll("-","/")}</td><td class="right ${priceClass(row.big,row.ours)}">${won(row.big)}</td><td class="right ${priceClass(row.mega,row.ours)}">${won(row.mega)}</td><td class="right ${priceClass(row.coupang,row.ours)}">${won(row.coupang)}</td><td class="right ${priceClass(row.naver,row.ours)}">${won(row.naver)}</td><td class="right">${won(row.ours)}</td></tr>`).join("")||`<tr><td colspan="6">아직 기록이 없습니다.</td></tr>`}
 function renderChanges(p){const by={};(p.history||[]).forEach(h=>{if(h.price==null)return;if(!by[h.seller_key])by[h.seller_key]=[];by[h.seller_key].push(h)});const changes=[];sellers.forEach(([label,key])=>{const arr=(by[key]||[]).sort((a,b)=>String(a.checked_at).localeCompare(String(b.checked_at)));for(let i=1;i<arr.length;i++)if(arr[i-1].price!==arr[i].price)changes.push({label,beforeDate:arr[i-1].checked_at.slice(0,10),date:arr[i].checked_at.slice(0,10),before:arr[i-1].price,after:arr[i].price,diff:arr[i].price-arr[i-1].price})});el("changeList").innerHTML=changes.map(c=>`<div class="change">${c.label} 가격 변동<br>${c.beforeDate.replaceAll("-","/")} ${won(c.before)} → ${c.date.replaceAll("-","/")} ${won(c.after)}으로 변경</div>`).join("")||`<div class="change">아직 가격 변동 기록이 없습니다.</div>`}
@@ -52,7 +79,12 @@ function editSelectedProduct(){
   el("productFormPanel").scrollIntoView({behavior:"smooth"});
 }
 function resetProductForm(){["productId","productName","productCost","productOurPrice","productMemo","urlMega","urlBig","urlCoupang","urlNaver"].forEach(id=>el(id).value="")}async function deleteSelectedProduct(){if(!selectedId||!confirm("상품 삭제?"))return;await api("/api/products?id="+encodeURIComponent(selectedId),{method:"DELETE"});selectedId=null;await load()}
-async function checkPrices(){el("apiStatus").textContent="가격 수집 중...";const data=await api("/api/check-prices",{method:"POST"});el("apiStatus").textContent=`가격 수집 완료: 성공 ${data.successCount}개 / 실패 ${data.failCount}개`;await load()}async function checkSelected(){if(!selectedId)return;el("apiStatus").textContent="선택 상품 수집 중...";const data=await api("/api/check-prices?productId="+encodeURIComponent(selectedId),{method:"POST"});el("apiStatus").textContent=`선택 상품 수집 완료: 성공 ${data.successCount}개 / 실패 ${data.failCount}개`;await load()}
+function summarizeFailures(data){
+  const fails=(data.results||[]).filter(r=>!r.ok).slice(0,4).map(r=>`${r.seller}:${r.note||"fail"}`).join(" / ");
+  return fails?` · ${fails}`:"";
+}
+async function checkPrices(){el("apiStatus").textContent="가격 수집 중...";const data=await api("/api/check-prices",{method:"POST"});el("apiStatus").textContent=`가격 수집 완료: 성공 ${data.successCount}개 / 실패 ${data.failCount}개${summarizeFailures(data)}`;await load()}
+async function checkSelected(){if(!selectedId)return;el("apiStatus").textContent="선택 상품 수집 중...";const data=await api("/api/check-prices?productId="+encodeURIComponent(selectedId),{method:"POST"});el("apiStatus").textContent=`선택 상품 수집 완료: 성공 ${data.successCount}개 / 실패 ${data.failCount}개${summarizeFailures(data)}`;await load()}
 function todayInput(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}function scrollToManual(){el("manualDate").value=todayInput();el("manualPricePanel").scrollIntoView({behavior:"smooth"})}async function saveManualPrice(){if(!selectedId)return alert("상품 선택");const price=parseNum(el("manualPrice").value);if(!price)return alert("가격 입력");await api("/api/manual-price",{method:"POST",body:JSON.stringify({product_id:selectedId,seller_key:el("manualSeller").value,price,checked_at:el("manualDate").value||todayInput()})});el("manualPrice").value="";await load();alert("수동 가격 저장 완료")}function exportCSV(){location.href="/api/export-csv"}el("searchInput").addEventListener("input",renderRows);load();
 
 function sellerLatestRow(product, sellerKey){
@@ -62,7 +94,7 @@ function sellerLatestRow(product, sellerKey){
 }
 function sellerDisplayValue(product, sellerKey){
   const row=sellerLatestRow(product,sellerKey);
-  if(row && row.price!=null) return fmt(row.price);
+  if(row && row.price!=null) return won(row.price);
   if(row && row.note){
     if(String(row.note).includes("HTTP 429")) return "수집실패(429)";
     if(String(row.note).includes("HTTP 403")) return "수집실패(403)";

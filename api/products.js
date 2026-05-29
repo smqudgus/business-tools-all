@@ -48,11 +48,13 @@ module.exports = async function handler(req, res) {
 
         const rawHist = history.filter(h => h.product_id === p.id);
 
-        // 화면에는 정상 범위 가격만 보여줌. fail/null 기록은 최신 가격 계산에서 제외.
+        // 가격 히스토리 표에는 정상 범위 가격만 보여줌.
         const displayHist = rawHist.filter(h => isValidDisplayPrice(p, h.price));
 
+        // 현재 비교표에는 판매처별 '가장 최근 기록'을 보여줌.
+        // 성공이면 금액, 실패면 HTTP 429/403 같은 실패 사유를 표시하기 위함.
         const latest = {};
-        displayHist.forEach(h => {
+        rawHist.forEach(h => {
           latest[h.seller_key] = h;
         });
 
@@ -60,6 +62,7 @@ module.exports = async function handler(req, res) {
           ...p,
           links: pLinks,
           history: displayHist,
+          raw_history: rawHist,
           latest,
           hidden_history_count: rawHist.length - displayHist.length
         };
